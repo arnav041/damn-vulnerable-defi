@@ -99,6 +99,9 @@ contract TrustfulOracle is AccessControlEnumerable {
 
     function _computeMedianPrice(string memory symbol) private view returns (uint256) {
         uint256[] memory prices = _sort(getAllPricesForSymbol(symbol));
+        // if we control two oracles then the price array will look like [999, 0,0]
+        // we use sort method here, lead to [0,0,999]
+        // hence zero price for nft will return by the contract 
 
         // calculate median price
         if (prices.length % 2 == 0) {
