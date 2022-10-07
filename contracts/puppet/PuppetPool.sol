@@ -56,3 +56,20 @@ contract PuppetPool is ReentrancyGuard {
      */
 
 }
+
+contract HackPuppet {
+    using Address for address payable;
+
+    address public immutable uniswapPair;
+    DamnValuableToken public immutable token;
+    
+
+    constructor (address tokenAddress, address uniswapPairAddress) {
+        token = DamnValuableToken(tokenAddress);
+        uniswapPair = uniswapPairAddress;
+    }
+
+    function exploit() external { 
+       // uniswapPair.br
+    }
+}
