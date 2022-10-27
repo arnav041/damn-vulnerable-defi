@@ -57,19 +57,5 @@ contract PuppetPool is ReentrancyGuard {
 
 }
 
-contract HackPuppet {
-    using Address for address payable;
-
-    address public immutable uniswapPair;
-    DamnValuableToken public immutable token;
-    
-
-    constructor (address tokenAddress, address uniswapPairAddress) {
-        token = DamnValuableToken(tokenAddress);
-        uniswapPair = uniswapPairAddress;
-    }
-
-    function exploit() external { 
-       // uniswapPair.br
-    }
-}
+// we have to borrow dvt token for that depositRequired  = 0 ,
+// it can be done by make pair eth balance 0 or swaping calculated amount of token that makes pair eth balance 0-

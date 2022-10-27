@@ -114,7 +114,7 @@ describe('[Challenge] Puppet', function () {
             deadlin
         )
         const depositEtherAmount = await this.lendingPool.calculateDepositRequired(POOL_INITIAL_TOKEN_BALANCE);
-        console.log('Amount of ether to deposit', depositEtherAmount)
+        console.log('Amount of ether to deposit', parseFloat(depositEtherAmount))
         await this.lendingPool.connect(attacker).borrow(POOL_INITIAL_TOKEN_BALANCE ,{value: depositEtherAmount})
     });
 
